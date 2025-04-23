@@ -1,9 +1,9 @@
 
-# 🧬 OXPHOS Gene Extraction and Probe Design Pipeline
+ OXPHOS Gene Extraction and Probe Design Pipeline
 
 This project identifies and extracts ~80 OXPHOS genes from the North American Mallard genome using a reference from Pekin duck, maps them via BLAST, and designs 120mer hybridization probes for targeted sequencing.
 
-## 📁 Step-by-Step Instructions
+##  Step-by-Step Instructions
 
 ### 🔹 Step 1: Prepare OXPHOS Gene List
 Create a file `oxphos_gene_list.txt` from KEGG pathway (map00190) with gene symbols like:
@@ -13,11 +13,11 @@ COX4I1
 ATP5F1A
 ...
 ```
-🗂️ File also saved as: `OXPHOS_gene_List.csv`
+🗂 File also saved as: `OXPHOS_gene_List.csv`
 
 ---
 
-### 🔹 Step 2: Download Duck Genomes
+###  Step 2: Download Duck Genomes
 ```bash
 # Create directory
 mkdir -p pekin_duck_annotation && cd pekin_duck_annotation
@@ -31,7 +31,7 @@ gunzip *.gz
 
 ---
 
-### 🔹 Step 3: Extract GFF Hits for OXPHOS Genes
+###  Step 3: Extract GFF Hits for OXPHOS Genes
 ```bash
 mkdir -p gff_matches
 
@@ -52,7 +52,7 @@ head ../oxphos_combined.gff
 
 ---
 
-### 🔹 Step 4: Create BED File and Extract Sequences
+###  Step 4: Create BED File and Extract Sequences
 ```bash
 awk '$3 == "gene" {print $1"	"($4-1)"	"$5"	"$9"	.	"$7}' ../oxphos_combined.gff > oxphos_genes.bed
 
@@ -63,7 +63,7 @@ grep ">" oxphos_gene_sequences.fasta | wc -l
 
 ---
 
-### 🔹 Step 5: Map to NAwild Genome with BLAST
+###  Step 5: Map to NAwild Genome with BLAST
 ```bash
 # Prepare BLAST database
 makeblastdb -in GCA_030704485.1_NAwild_v1.0_genomic.fna -dbtype nucl -out nawild_db
@@ -80,7 +80,7 @@ awk '{start=($3<$4)?$3:$4; end=($3>$4)?$3:$4; print $2"\t"start-1"\t"end"\t"$1}'
 
 ---
 
-### 🔹 Step 6: Design 120mer Probes
+###  Step 6: Design 120mer Probes
 ```bash
 # Tile 120mer windows with 60 bp overlap
 bedtools makewindows -b oxphos_blast_hits.bed -w 120 -s 60 > oxphos_120mer_windows.bed
@@ -94,7 +94,7 @@ grep ">" oxphos_120mer_probes.fasta | wc -l
 
 ---
 
-### 🔹 Step 7: Rename Probes for Synthesis
+###  Step 7: Rename Probes for Synthesis
 ```bash
 awk 'NR % 2 == 0' oxphos_120mer_probes.fasta > seqs.txt
 seq 1 $(wc -l < seqs.txt) | awk '{printf ">probe_%05d\n", $1}' > headers.txt
@@ -103,7 +103,7 @@ paste -d "\n" headers.txt seqs.txt > oxphos_120mer_probes_synthesis.fasta
 
 ---
 
-### 🔹 Step 8: Link Probes to Coordinates (Metadata File)
+###  Step 8: Link Probes to Coordinates (Metadata File)
 ```bash
 awk '{print $1"\t"$2"\t"$3"\t"$6}' oxphos_120mer_windows.bed > probe_coords.txt
 paste headers.txt probe_coords.txt > probe_metadata.tsv
